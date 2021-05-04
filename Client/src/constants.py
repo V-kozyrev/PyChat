@@ -1,11 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
-from typing import Literal
+import logging
 
 
-class EntryType(Enum):
-    REGISTRATION = 1
-    AUTHORIZATION = 2
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -21,6 +18,3 @@ class StringConstants:
 class ConnectionConstants:
     host = '127.0.0.1'
     port = 7976
-
-
-MessageKeys = Literal["/p", "/h", "/o", "/c", "/mph", "REGISTRATION", ""]

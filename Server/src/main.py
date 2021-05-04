@@ -1,5 +1,5 @@
 import socket
-from constants import EntryType, ChatConstants
+from constants import EntryType, ChatConstants, ConnectionConstants
 from chat_process.server_process import entry_process
 
 
@@ -23,6 +23,6 @@ def receive_client():  # get a client and authorize
 
 if __name__ == '__main__':
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket initialization
-    server.bind((ChatConstants.host, ChatConstants.port))  # binding host and port to socket
+    server.bind((ConnectionConstants.host, ConnectionConstants.port))  # binding host and port to socket
     server.listen()
     receive_client()

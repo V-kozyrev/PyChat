@@ -28,8 +28,6 @@ class DbConstants:
 
 @dataclass(frozen=True)
 class ChatConstants:
-    host = '127.0.0.1'
-    port = 7976
     REGISTRATION = 'REGISTRATION'
     AUTHORIZATION = 'AUTHORIZATION'
     db_service = DataBase().get_service()
@@ -40,6 +38,13 @@ class ChatConstants:
                           "/o: online list",
                           "/c: commands list",
                           "/mph: private message history"]
+
+
+
+@dataclass(frozen=True)
+class ConnectionConstants:
+    host = '127.0.0.1'
+    port = 7976
 
 
 class ServerRepository:
