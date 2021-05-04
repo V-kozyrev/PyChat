@@ -32,7 +32,7 @@ def entry_process(entry_type: EntryType, client):  # user login process
             client.send('LOGIN'.encode('utf-8'))
             login = client.recv(1024).decode('utf-8')
             if ChatConstants.db_service.chek_user_login(login):
-                client.send('this login already exists'.encode('utf-8'))
+                client.send('USER EXISTS'.encode('utf-8'))
                 return False
             else:
                 client.send('PASS'.encode('utf-8'))

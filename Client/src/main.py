@@ -1,72 +1,101 @@
 import socket
 import threading
 import logging
-from constants import ChatConstants
+from constants import StringConstants, ConnectionConstants
+from user_info import UserInfo
 
 
-def receive(login: str, password: str, nickname: str):
-    while True:  # making valid connection
-        try:
-            message = client.recv(1024).decode('utf-8')
-        except ConnectionResetError as e:
-            logger.error("disconnection from server!")
-            client.close()
-            break
-        if message == ChatConstants.LOGIN:
-            client.send(login.encode('utf-8'))
-        elif message == ChatConstants.PASSWORD:
-            client.send(password.encode('utf-8'))
-        elif message == ChatConstants.NAME:
-            client.send(nickname.encode('utf-8'))
-        elif message == ChatConstants.WRONG_LOGIN_OR_PASS:
-            print(message)
-            client.close()
-            break
-        else:
-            print(message)
-
-
-def write():  # sending a message
-    while True:
-        message = input('')
-        client.send(message.encode('utf-8'))
-
-
-def entry_process():
-    print('1: регистрация, 2: авторизация, напиши цифру')
-    user_input = input('')
+def receive(client):
     try:
-        if user_input == '1':
-            client.send('REGISTRATION'.encode('utf-8'))
-            login = input("Choose your login: ")
-            password = input("Choose your password: ")
-            nickname = input("Choose your nickname: ")
-            receive_thread = threading.Thread(target=receive,
-                                              args=(login, password, nickname))  # receiving multiple messages
-            receive_thread.start()
-        elif user_input == '2':
-            client.send('AUTHORIZATION'.encode('utf-8'))
-            login = input("Choose your login: ")
-            password = input("Choose your password: ")
-            receive_thread = threading.Thread(target=receive,
-                                              args=(login, password, None))  # receiving multiple messages
-            receive_thread.start()
-        else:
-            return False
+        message = client.recv(1024).decode('utf-8')
+
+        return message
     except ConnectionResetError as e:
         logger.error("disconnection from server!")
         client.close()
+        return None
 
-    write_thread = threading.Thread(target=write)  # sending messages
+
+def listen_new_message(client):
+    while True:  # making valid connection
+        message = receive(client)
+        if message is None:
+            break
+        print(message)
+
+
+def receive_user_info(client):
+    while True:  # making valid connection
+        message = receive(client)
+        if message == StringConstants.LOGIN:
+            send_to_server(client, UserInfo().login)
+            return True
+        if message == StringConstants.PASSWORD:
+            send_to_server(client, UserInfo().password)
+            return True
+        if message == StringConstants.NAME:
+            send_to_server(client, UserInfo().nickname)
+            return True
+        if message == StringConstants.WRONG_LOGIN_OR_PASS:
+            print("Wrong username or password")
+            return False
+        if message == StringConstants.USER_EXISTS:
+            print("User already exists in chat, try to login")
+            return False
+
+
+def send_to_server(client, message: str):
+    client.send(message.encode('utf-8'))
+
+
+def write(client):  # sending a message
+    while True:
+        message = input('')
+        send_to_server(client, message)
+
+
+def get_user_info() -> UserInfo:
+    print('1: регистрация, 2: авторизация, напиши цифру')
+    while True:
+        if user_input := input('') in ["1", "2"]:
+            break
+
+    if user_input == '1':
+        login = input("Choose your login: ")
+        password = input("Choose your password: ")
+        nickname = input("Choose your nickname: ")  # проверить на допустимые значения
+        return UserInfo(login=login, password=password, nickname=nickname, is_new_user=True)
+    if user_input == '2':
+        login = input("Choose your login: ")
+        password = input("Choose your password: ")
+        return UserInfo(login=login, password=password, nickname=None, is_new_user=False)
+
+
+def entry_process(client):
+    is_authorized = False
+    while not is_authorized:
+        user_info = get_user_info()
+
+        if user_info.is_new_user:
+            try:
+                send_to_server(client, 'REGISTRATION')  # переделать регистрацию в отправку 1 сообщения
+            except ConnectionResetError as e:
+                logger.error("disconnection from server!")
+                client.close()
+        else:
+            try:
+                send_to_server(client, 'AUTHORIZATION')
+            except ConnectionResetError as e:
+                logger.error("disconnection from server!")
+                client.close()
+        is_authorized = receive_user_info(client)
+
+    read_thread = threading.Thread(target=listen_new_message, args=(client,))  # sending messages
+    read_thread.start()
+    write_thread = threading.Thread(target=write, args=(client,))  # sending messages
     write_thread.start()
 
 
 if __name__ == '__main__':
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket initialization
     logger = logging.getLogger(__name__)
-    try:
-        client.connect((ChatConstants.host, ChatConstants.port))  # connecting client to server
-        entry_process()
-    except ConnectionRefusedError as e:
-        logger.error("the server is down!")
-        client.close()
+    run_client()
