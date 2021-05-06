@@ -1,7 +1,7 @@
 from socket import socket
-
-from constants import StringConstants, logger
-from messaging import *
+from constants import logger
+from constants import StringConstants
+from messaging import send_to_server, receive, listen_new_message, write
 from user_info import UserInfo
 import threading
 

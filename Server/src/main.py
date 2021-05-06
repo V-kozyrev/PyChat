@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from chat_process.message_process import receive_to_client
+from chat_process.message_process import receive_from_client
 from constants import EntryType, ChatConstants, ConnectionConstants
 from chat_process.server_process import entry_process
 
@@ -11,7 +11,7 @@ def receive_client():  # get a client and authorize
         client, address = server.accept()
         logger.info("Connected with {}".format(str(address)))
         try:
-            message = receive_to_client(client)
+            message = receive_from_client(client)
         except ConnectionResetError as e:
             client.close()
             continue

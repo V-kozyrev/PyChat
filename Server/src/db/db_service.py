@@ -109,19 +109,17 @@ class DataBaseServices:
         with self.connection.cursor() as cursor:
             cursor.execute(f"""SELECT users.user_name, message_history.message, message_history.time
                                 FROM users 
-                                INNER JOIN(
-                                    SELECT sender_id, message, time
-                                    FROM message_history
-                                    WHERE sender_id = {sender_id} AND recipient_id = {recipient_id}
-                                ) AS message_history ON message_history.sender_id = users.id
+                                INNER JOIN message_history
+                                    ON message_history.sender_id = users.id 
+                                        AND sender_id = {sender_id} 
+                                        AND recipient_id = {recipient_id}
                                 UNION
                                 SELECT users.user_name, message_history.message, message_history.time
                                 FROM users 
-                                INNER JOIN(
-                                    SELECT sender_id, message, time
-                                    FROM message_history
-                                    WHERE sender_id = {recipient_id} AND recipient_id = {sender_id}
-                                ) AS message_history ON message_history.sender_id = users.id
+                                INNER JOIN message_history
+                                    ON message_history.sender_id = users.id 
+                                        AND sender_id = {recipient_id} 
+                                        AND recipient_id = {sender_id}
                                 ORDER BY time DESC
                                 LIMIT {limit}""")
             return cursor.fetchall()

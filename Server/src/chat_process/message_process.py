@@ -3,9 +3,10 @@ from socket import socket
 from chat_commands import ChatCommands
 from constants import ChatCommandsConstants, ChatConstants
 from client_info import ServerRepository
+from db.db_service import DataBaseServices
 
 
-def receive_to_client(client):
+def receive_from_client(client: socket):
     try:
         message = client.recv(1024).decode('utf-8')
         return message
@@ -28,37 +29,38 @@ def send_chat_commands(client: socket):  # send chat commands to client
         send_to_client(client, chat_command)
 
 
-def send_online_list(client: socket, db_service):  # send online list to client
+def send_online_list(client: socket, db_service: DataBaseServices):  # send online list to client
     send_to_client(client, 'ONLINE LIST')
     for online_list in db_service.get_online_list():
         send_to_client(client, 'user {}: online'.format(online_list[0]))
 
 
 # send private message history to client
-def send_private_message_history(client: socket, sender_id: int, recipient_id: int, limit: int, db_service):
+def send_private_message_history(client: socket, sender_id: int, recipient_id: int, limit: int,
+                                 db_service: DataBaseServices):
     send_to_client(client, 'MESSAGE PRIVATE HISTORY WITH {}'.format(recipient_id))
     for array_history in db_service.get_private_message_history(sender_id, recipient_id, limit):
         send_to_client(client, '{}: {}'.format(array_history[0], array_history[1]))
 
 
-def send_message_history_server(client: socket, limit: int, db_service):  # send message history server to client
+def send_message_history_server(client: socket, limit: int, db_service: DataBaseServices):
     send_to_client(client, 'MESSAGE HISTORY')
     for array_history in db_service.get_message_history_server(limit):
         send_to_client(client, '{}: {}'.format(array_history[0], array_history[1]))
 
 
-def add_message_history(sender_id: int, recipient_id: int, message: str, db_service):  # add message history to bd
+def add_message_history(sender_id: int, recipient_id: int, message: str, db_service: DataBaseServices):
     db_service.add_message_history(sender_id, recipient_id, message)
 
 
-def broadcast(sender_id: int, message: str, db_service):  # sending messages to users
+def broadcast(sender_id: int, message: str, db_service: DataBaseServices):  # sending messages to users
     add_message_history(sender_id, 0, message, db_service)
     for key in ServerRepository.clients:
         send_to_client(ServerRepository.clients[key].client, message)
 
 
 # send private message sender and recipient
-def private_message(sender_id: int, recipient_id: int, message: str, db_service):
+def private_message(sender_id: int, recipient_id: int, message: str, db_service: DataBaseServices):
     send_to_client(ServerRepository.clients[sender_id].client,
                    'Private message to {}: {}'.format(ServerRepository.clients[recipient_id].nickname, message))
 
@@ -69,7 +71,7 @@ def private_message(sender_id: int, recipient_id: int, message: str, db_service)
 
 
 def process_chat_commands(client: socket, message: str, user_id: int,
-                          db_service) -> bool:  # handle chat commands from user
+                          db_service: DataBaseServices) -> bool:  # handle chat commands from user
     if ChatCommands.private_message.is_message_contains_command(message):
         target_nickname = message[:ChatCommandsConstants.command_size_one_character].split(" ")[1]
         if db_service.chek_user_online(target_nickname):
