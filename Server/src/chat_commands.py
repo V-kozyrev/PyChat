@@ -8,6 +8,14 @@ class _ChatCommand:
     end_idx_in_message: int
     command: Literal["/p", "/h", "/o", "/c", "/mph"]
 
+    def _extract_command_from_message(self, message: str) -> str:
+        return message[self.start_idx_in_message:self.end_idx_in_message]
+
+    def is_message_contains_command(self, message: str) -> bool:
+        if self._extract_command_from_message(message) == self.command:
+            return True
+        return False
+
 
 @dataclass(frozen=True)
 class ChatCommands:

@@ -1,8 +1,11 @@
 import psycopg2
-
+import logging
 import constants
 
 from db.db_service import DataBaseServices
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class DataBase:
@@ -19,8 +22,9 @@ class DataBase:
                                                    host=constants.DbConstants.host,
                                                    port=constants.DbConstants.port,
                                                    database=constants.DbConstants.database)
+            logger.info("Соединение с PostgreSQL открыто")
         except psycopg2.OperationalError as error:
-            constants.ChatConstants.logger.error("Ошибка при работе с PostgreSQL %s", type(error))
+            logger.error("Ошибка при работе с PostgreSQL %s", type(error))
 
     def get_service(self):
         if self._service is None:
@@ -29,4 +33,4 @@ class DataBase:
 
     def data_base_close(self):
         self._connect_to_db.close()
-        constants.ChatConstants.logger.info("Соединение с PostgreSQL закрыто")
+        logger.info("Соединение с PostgreSQL закрыто")

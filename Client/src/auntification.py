@@ -1,10 +1,12 @@
+from socket import socket
+
 from constants import StringConstants, logger
 from messaging import *
 from user_info import UserInfo
 import threading
 
 
-def receive_user_info(client):
+def receive_user_info(client: socket):
     while True:  # making valid connection
         message = receive(client)
         if message == StringConstants.LOGIN:
@@ -25,7 +27,7 @@ def receive_user_info(client):
 
 
 def get_user_info() -> UserInfo:
-    print('1: регистрация, 2: авторизация, напиши цифру')
+    print('for registration enter: 1, for authorization enter: 2')
     while True:
         if (user_input := input('')) in ["1", "2"]:
             break
@@ -40,7 +42,7 @@ def get_user_info() -> UserInfo:
         return UserInfo(login=login, password=password, nickname=None, is_new_user=False)
 
 
-def entry_process(client):
+def entry_process(client: socket):
     is_authorized = False
     while not is_authorized:
         user_info = get_user_info()

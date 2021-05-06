@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from db.db import DataBase
 import os
-import logging
 
 
 @dataclass(frozen=True)
@@ -30,9 +28,6 @@ class DbConstants:
 class ChatConstants:
     REGISTRATION = 'REGISTRATION'
     AUTHORIZATION = 'AUTHORIZATION'
-    db_service = DataBase().get_service()
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO)
     chat_commands_list = ["/p: private message",
                           "/h: history message server",
                           "/o: online list",
@@ -40,13 +35,7 @@ class ChatConstants:
                           "/mph: private message history"]
 
 
-
 @dataclass(frozen=True)
 class ConnectionConstants:
     host = '127.0.0.1'
     port = 7976
-
-
-class ServerRepository:
-    clients = dict()
-    nicknames = dict()
