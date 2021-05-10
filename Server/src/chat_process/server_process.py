@@ -39,7 +39,11 @@ def handle(user_id: int):
         if message is None:
             remove_disconnected_user(user_id, db_service)
             break
-        if process_chat_commands(client, message, user_id, db_service):  # processing user message
+        try:
+            if process_chat_commands(client, message, user_id, db_service):  # processing user message
+                continue
+        except IndexError as e:
+            send_to_client(client, "Error message")
             continue
         add_message_history(user_id, 0, message, db_service)
         message = '{}: {}'.format(ServerRepository.clients[user_id].nickname, message)
