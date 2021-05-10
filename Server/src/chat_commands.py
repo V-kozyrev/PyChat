@@ -9,9 +9,19 @@ class _ChatCommand:
     command: Literal["/p", "/h", "/o", "/c", "/mph"]
 
     def _extract_command_from_message(self, message: str) -> str:
+        """
+        Extract command from message
+        :param message: Client message
+        :return: Сommand from message
+        """
         return message[self.start_idx_in_message:self.end_idx_in_message]
 
     def is_message_contains_command(self, message: str) -> bool:
+        """
+        Check for the command in the message
+        :param message: Client message
+        :return: True or False
+        """
         if self._extract_command_from_message(message) == self.command:
             return True
         return False

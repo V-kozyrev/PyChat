@@ -7,6 +7,11 @@ import threading
 
 
 def receive_user_info(client: socket):
+    """
+    Getting login parameters from server
+    :param client: Client socket
+    :return: True or False
+    """
     while True:  # making valid connection
         message = receive(client)
         if message == StringConstants.LOGIN:
@@ -27,6 +32,10 @@ def receive_user_info(client: socket):
 
 
 def get_user_info() -> UserInfo:
+    """
+    Get user info
+    :return: User info
+    """
     print('for registration enter: 1, for authorization enter: 2')
     while True:
         if (user_input := input('')) in ["1", "2"]:
@@ -43,6 +52,11 @@ def get_user_info() -> UserInfo:
 
 
 def entry_process(client: socket):
+    """
+    Server login process. Opening a stream for reading and entering messages
+    :param client: Client socket
+    :return: Nothing
+    """
     is_authorized = False
     while not is_authorized:
         user_info = get_user_info()

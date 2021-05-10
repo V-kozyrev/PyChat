@@ -4,6 +4,10 @@ from constants import ConnectionConstants, logger
 
 
 def run_client():
+    """
+    Client to server connection
+    :return: Nothing
+    """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket initialization
 
     try:

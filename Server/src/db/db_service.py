@@ -70,6 +70,13 @@ class DataBaseServices:
                 return True
             return False
 
+    def is_nickname_exists(self, name: str):  # check user nickname
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"""SELECT user_name FROM users WHERE user_name = '{name}'""")
+            if cursor.fetchone() is not None:
+                return True
+            return False
+
     def chek_user_online(self, name: str):  # check the user online on the server
         with self.connection.cursor() as cursor:
             cursor.execute(f"""SELECT online FROM users WHERE user_name = '{name}'""")
