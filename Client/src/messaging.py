@@ -1,6 +1,5 @@
 from socket import socket
-
-from constants import logger
+from constants import logger, MessageConstants
 
 
 def receive(client: socket):
@@ -10,13 +9,12 @@ def receive(client: socket):
     :return: Message
     """
     try:
-        message = client.recv(1024).decode('utf-8')
-
+        message = client.recv(MessageConstants.size_message_bytes).decode(MessageConstants.server_encoding)
         return message
-    except ConnectionResetError as e:
+    except ConnectionResetError:
         logger.error("disconnection from server!")
         client.close()
-        return None
+        return
 
 
 def listen_new_message(client: socket):
@@ -25,7 +23,7 @@ def listen_new_message(client: socket):
     :param client: Client socket
     :return: Nothing
     """
-    while True:  # making valid connection
+    while True:
         message = receive(client)
         if message is None:
             break
@@ -39,10 +37,10 @@ def send_to_server(client: socket, message: str):
     :param message:
     :return: Nothing
     """
-    client.send(message.encode('utf-8'))
+    client.send(message.encode(MessageConstants.server_encoding))
 
 
-def write(client: socket):  # sending a message
+def write(client: socket):
     """
     User input new message
     :param client: Client socket

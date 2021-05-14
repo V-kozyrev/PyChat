@@ -5,8 +5,8 @@ import os
 
 @dataclass(frozen=True)
 class ChatCommandsConstants:
-    command_size_one_character = 53
-    history_private_message_command_size = 55
+    max_size_one_character_command_with_arg = 53
+    max_size_three_character_command_with_arg = 55
 
 
 class EntryType(Enum):
@@ -25,17 +25,29 @@ class DbConstants:
 
 
 @dataclass(frozen=True)
-class ChatConstants:
-    REGISTRATION = 'REGISTRATION'
-    AUTHORIZATION = 'AUTHORIZATION'
-    chat_commands_list = ["/p: private message",
-                          "/h: history message server",
-                          "/o: online list",
-                          "/c: commands list",
-                          "/mph: private message history"]
+class LoginConstants:
+    REGISTRATION = "REGISTRATION"
+    AUTHORIZATION = "AUTHORIZATION"
+    LOGIN = "LOGIN"
+    NAME = "NAME"
+    PASSWORD = "PASSWORD"
+    WRONG_LOGIN_OR_PASS = "WRONG LOGIN OR PASS"
+    USER_EXISTS = "USER EXISTS"
 
 
 @dataclass(frozen=True)
 class ConnectionConstants:
-    host = '127.0.0.1'
-    port = 7976
+    host = os.getenv("ServerHost") or "127.0.0.1"
+    port = os.getenv("ServerPort") or 7976
+
+
+@dataclass(frozen=True)
+class MessageConstants:
+    server_encoding = "utf-8"
+    size_message_bytes = 1024
+
+
+@dataclass(frozen=True)
+class ServerConstants:
+    size_history_server = 10
+    history_server = 0

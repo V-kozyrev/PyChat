@@ -1,8 +1,7 @@
 from socket import socket
-
 from chat_commands import ChatCommands
-from constants import ChatCommandsConstants, ChatConstants
-from client_info import ServerRepository
+from constants import ChatCommandsConstants, MessageConstants
+from server_repository import ServerRepository
 from db.db_service import DataBaseServices
 
 
@@ -13,9 +12,9 @@ def receive_from_client(client: socket):
     :return: Client message
     """
     try:
-        message = client.recv(1024).decode('utf-8')
+        message = client.recv(MessageConstants.size_message_bytes).decode(MessageConstants.server_encoding)
         return message
-    except ConnectionResetError as e:  # removing clients
+    except ConnectionResetError:
         client.close()
         return
 
@@ -28,36 +27,12 @@ def send_to_client(client: socket, message: str):
     :return: Nothing
     """
     try:
-        client.send(message.encode('utf-8'))
-    except ConnectionResetError as e:  # removing clients
+        client.send(message.encode(MessageConstants.server_encoding))
+    except ConnectionResetError:
         client.close()
         return
 
 
-def send_chat_commands(client: socket):  # send chat commands to client
-    """
-    Send chat commands to the client
-    :param client: Client socket
-    :return: Nothing
-    """
-    send_to_client(client, "CHAT COMMANDS")
-    for chat_command in ChatConstants.chat_commands_list:
-        send_to_client(client, chat_command)
-
-
-def send_online_list(client: socket, db_service: DataBaseServices):  # send online list to client
-    """
-    Send all online users to the client
-    :param client: Client socket
-    :param db_service: Commands from db
-    :return: Nothing
-    """
-    send_to_client(client, 'ONLINE LIST')
-    for online_list in db_service.get_online_list():
-        send_to_client(client, 'user {}: online'.format(online_list[0]))
-
-
-# send private message history to client
 def send_private_message_history(client: socket, sender_id: int, recipient_id: int, limit: int,
                                  db_service: DataBaseServices):
     """
@@ -69,9 +44,11 @@ def send_private_message_history(client: socket, sender_id: int, recipient_id: i
     :param db_service: Commands from db
     :return: Nothing
     """
-    send_to_client(client, 'MESSAGE PRIVATE HISTORY WITH {}'.format(recipient_id))
-    for array_history in db_service.get_private_message_history(sender_id, recipient_id, limit):
-        send_to_client(client, '{}: {}'.format(array_history[0], array_history[1]))
+    send_to_client(client,
+                   "MESSAGE PRIVATE HISTORY WITH {}\n".format(
+                       ServerRepository.clients[recipient_id].nickname) + "\n".join(
+                       '{}: {}'.format(array_history[0], array_history[1]) for array_history in
+                       db_service.get_private_message_history(sender_id, recipient_id, limit)))
 
 
 def send_message_history_server(client: socket, limit: int, db_service: DataBaseServices):
@@ -82,36 +59,23 @@ def send_message_history_server(client: socket, limit: int, db_service: DataBase
     :param db_service: Commands from db
     :return: Nothing
     """
-    send_to_client(client, 'MESSAGE HISTORY')
-    for array_history in db_service.get_message_history_server(limit):
-        send_to_client(client, '{}: {}'.format(array_history[0], array_history[1]))
+    send_to_client(client, "MESSAGE_HISTORY:\n" + "\n".join(
+        '{}: {}'.format(array_history[0], array_history[1]) for array_history in
+        db_service.get_message_history_server(limit)))
+    # for array_history in db_service.get_message_history_server(limit):
+    #    send_to_client(client, '{}: {}'.format(array_history[0], array_history[1]))
 
 
-def add_message_history(sender_id: int, recipient_id: int, message: str, db_service: DataBaseServices):
+def broadcast(message: str):
     """
-    Add message history to db
-    :param sender_id: Sender id
-    :param recipient_id: Recipient id
+    Sending message to all users
     :param message: Client message
-    :param db_service: Commands from db
     :return: Nothing
     """
-    db_service.add_message_history(sender_id, recipient_id, message)
+    for client in ServerRepository.clients:
+        send_to_client(ServerRepository.clients[client].client, message)
 
 
-def broadcast(sender_id: int, message: str, db_service: DataBaseServices):  # sending messages to users
-    """
-    Sending a message to users
-    :param sender_id: Sender id
-    :param message: Client message
-    :param db_service: Commands from db
-    :return: Nothing
-    """
-    for key in ServerRepository.clients:
-        send_to_client(ServerRepository.clients[key].client, message)
-
-
-# send private message sender and recipient
 def private_message(sender_id: int, recipient_id: int, message: str, db_service: DataBaseServices):
     """
     Sending a private message and add to db
@@ -127,32 +91,23 @@ def private_message(sender_id: int, recipient_id: int, message: str, db_service:
     send_to_client(ServerRepository.clients[recipient_id].client,
                    'Private message from {}: {}'.format(ServerRepository.clients[sender_id].nickname, message))
 
-    add_message_history(sender_id, recipient_id, message, db_service)
-
-
-def is_nickname_exists(nickname: str, db_service: DataBaseServices) -> bool:
-    """
-    checking for the existence of a username in db
-    :param nickname: Name of client
-    :param db_service: Commands from db
-    :return: True or False
-    """
-    return db_service.is_nickname_exists(nickname)
+    db_service.add_message_history(sender_id, recipient_id, message)
 
 
 def process_chat_commands(client: socket, message: str, user_id: int,
-                          db_service: DataBaseServices) -> bool:  # handle chat commands from user
+                          db_service: DataBaseServices) -> bool:
     """
     Processing user message and command execution
     :param client: Client socket
     :param message: Client message
     :param user_id: User id from db
     :param db_service: Commands from db
-    :return: True or False
+    :return: True when the user message contains the command.
+             False when the user message does not contains the command
     """
     if ChatCommands.private_message.is_message_contains_command(message):
-        target_nickname = message[:ChatCommandsConstants.command_size_one_character].split(" ")[1]
-        if is_nickname_exists(target_nickname, db_service) is False:
+        target_nickname = message[:ChatCommandsConstants.max_size_one_character_command_with_arg].split(" ")[1]
+        if db_service.is_nickname_exists(target_nickname) is False:
             send_to_client(client, "this nickname does not exist")
             return True
         if db_service.chek_user_online(target_nickname):
@@ -164,26 +119,26 @@ def process_chat_commands(client: socket, message: str, user_id: int,
         return True
 
     if ChatCommands.history_message_server.is_message_contains_command(message):
-        limit = int(message[:ChatCommandsConstants.command_size_one_character].split(" ")[1])
+        limit = int(message[:ChatCommandsConstants.max_size_one_character_command_with_arg].split(" ")[1])
         send_message_history_server(client, limit, db_service)
         return True
 
     if ChatCommands.history_private_message.is_message_contains_command(message):
-        target_nickname = message[:ChatCommandsConstants.history_private_message_command_size].split(" ")[1]
-        if is_nickname_exists(target_nickname, db_service) is False:
+        target_nickname = message[:ChatCommandsConstants.max_size_three_character_command_with_arg].split(" ")[1]
+        if db_service.is_nickname_exists(target_nickname) is False:
             send_to_client(client, "this nickname does not exist")
             return True
-        limit = int(message[:ChatCommandsConstants.history_private_message_command_size].split(" ")[2])
+        limit = int(message[:ChatCommandsConstants.max_size_three_character_command_with_arg].split(" ")[2])
         recipient_id = db_service.get_user_id_by_name(target_nickname)
         send_private_message_history(client, user_id, recipient_id, limit, db_service)
         return True
 
     if ChatCommands.online_list.is_message_contains_command(message):
-        send_online_list(client, db_service)
+        send_to_client(client, ServerRepository().get_user_online_list())
         return True
 
     if ChatCommands.chat_commands.is_message_contains_command(message):
-        send_chat_commands(client)
+        send_to_client(client, ChatCommands().get_chat_commands_with_description())
         return True
 
     return False

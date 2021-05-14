@@ -9,12 +9,11 @@ def run_client():
     :return: Nothing
     """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket initialization
-
     try:
         client.connect((ConnectionConstants.host, ConnectionConstants.port))  # connecting client to server
         entry_process(client)
-    except ConnectionRefusedError as e:
-        logger.error("the server is down!")
+    except (ConnectionRefusedError, ConnectionAbortedError):
+        logger.error("server dropped connection!")
         client.close()
 
 

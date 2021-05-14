@@ -1,7 +1,6 @@
 import psycopg2
 import logging
 import constants
-
 from db.db_service import DataBaseServices
 
 logger = logging.getLogger(__name__)
@@ -20,15 +19,14 @@ class DataBase:
         :return: Nothing
         """
         try:
-            # Connecting to an existing database
             self._connect_to_db = psycopg2.connect(user=constants.DbConstants.user,
                                                    password=constants.DbConstants.password,
                                                    host=constants.DbConstants.host,
                                                    port=constants.DbConstants.port,
                                                    database=constants.DbConstants.database)
-            logger.info("Соединение с PostgreSQL открыто")
+            logger.info("PostgreSQL connection open")
         except psycopg2.OperationalError as error:
-            logger.error("Ошибка при работе с PostgreSQL %s", type(error))
+            logger.error("Error while working with PostgreSQL %s", type(error))
 
     def get_service(self):
         """
@@ -45,4 +43,4 @@ class DataBase:
         :return: Nothing
         """
         self._connect_to_db.close()
-        logger.info("Соединение с PostgreSQL закрыто")
+        logger.info("PostgreSQL connection closed")
