@@ -13,6 +13,9 @@ To configure credential for the server, set  the specific environment variables:
 
 or change the defaults in the file "Server/constants.py" to what you want
 
+# Dependencies instalation:
+pip install -r requirements.txt
+
 # Running:
 
 go to repository root folder\
