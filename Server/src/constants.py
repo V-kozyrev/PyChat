@@ -17,7 +17,7 @@ class EntryType(Enum):
 
 @dataclass(frozen=True)
 class DbConstants:
-    password = os.getenv("dbpassword") or "38167294"
+    password = os.getenv("dbpassword") or "123"
     user = os.getenv("dbuser") or "postgres"
     host = os.getenv("dbhost") or "127.0.0.1"
     port = os.getenv("dbport") or "5432"
