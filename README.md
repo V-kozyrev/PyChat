@@ -7,9 +7,9 @@ The chat has several commands that you can enter to get information and send a p
 /mph [nickname] [quantity] - to view recent private messages\
 /o - to view the list of online users\
 /c - to view the list of commands\
-#Dependancy Installation:
+# Dependancy Installation:
 pip install -r requirements.txt
-#Running:
+# Running:
 go to chat folder and run\
 python3 Server\src\main.py\
 python3 Client\src\main.py
