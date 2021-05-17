@@ -22,9 +22,10 @@ def remove_disconnected_user(user_id: int, db_service: DataBaseServices):
     :param db_service: Service class for db
     """
     logger.info("Client was disconnect, kicking from server")
-    broadcast('{} left!'.format(ServerRepository.clients[user_id].nickname))
     db_service.change_offline_user_id(user_id)
     ServerRepository.clients.pop(user_id)
+    if len(ServerRepository.clients.keys()) != 0:
+        broadcast('{} left!'.format(ServerRepository.clients[user_id].nickname))
 
 
 def handle(user_id: int):
